@@ -1,5 +1,4 @@
 import alsaseq
-import os
 
 # Event structure: (evtype, flags, tag, queue, time stamp, source, destination, data)
 # Event types -> 10: CC, 12: AT
@@ -56,19 +55,69 @@ CC_F6_KUSER2 = 19
 CC_F7_KUSER3 = 20
 CC_F8_KUSER4 = 21
 
-# 74 71 79 72 | 17 19 20 21 
-
 MAX_CHANNEL = 16
 
-status = {
-    'layers_channels': [],
-    'layers_offset': [],
-    'layers_active': 0,
-    'split_note': 0,
+ZONE_FULL = 0
+ZONE_LOWER = 1
+ZONE_HIGHER = 2
+
+initial_status = {
+    'voices_channels': [0, 14, 9, 5],
+    'voices_zones': [ZONE_HIGHER, ZONE_HIGHER, ZONE_LOWER, ZONE_FULL],
+    'voices_offset': [0, 0, 0, 0],
+    'voices_active': 1,
+    'split_note': NOTES_DICT['B3'],
     'notes_hanging': [],
-    'mode': '',
-    'SW_active': []
+    'mode': 'play',
+    'SW_active': [0, 0]
 }
+
+status = {
+    'voices_channels': [0, 14, 9, 5],
+    'voices_zones': [ZONE_HIGHER, ZONE_HIGHER, ZONE_LOWER, ZONE_FULL],
+    'voices_offset': [0, 0, 0, 0],
+    'voices_active': 4,
+    'split_note': NOTES_DICT['B3'],
+    'notes_hanging': [],
+    'mode': 'play',
+    'SW_active': [0, 0]
+}
+
+def manage_output_event(ev):
+    evtype = ev[0]
+    if evtype == NOTEON_CODE:
+        split = status['split_note']
+        data = ev[7]
+        note = data[1]
+        for voice in range(status['voices_active']):
+            zone = status['voices_zones'][voice]
+            if zone == ZONE_FULL \
+                or (zone == ZONE_LOWER and note <= split) \
+                or (zone == ZONE_HIGHER and note > split):
+                out_note = note + status['voices_offset'][voice]
+                channel = status['voices_channels'][voice]
+                event = change_event_paramenter(ev, channel=channel, param_note=out_note)
+                status['notes_hanging'].append( (channel, note, out_note) )
+                alsaseq.output(event)
+
+    elif evtype == NOTEOFF_CODE:
+        leng = len(status['notes_hanging'])
+        for index in reversed(range(leng)):
+            channel, note, out_note = status['notes_hanging'][index]
+            if note == ev[7][1]:
+                event = create_note_off_event(channel, out_note)
+                alsaseq.output(event)
+                del status['notes_hanging'][index]
+
+    # elif evtype == CC_CODE:
+    #     pass # TODO handle sustain over multiple channels
+    else:
+        for voice in range(status['voices_active']):
+            channel = status['voices_channels'][voice]
+            event = change_event_paramenter(ev, channel=channel)
+            alsaseq.output(event)
+    
+    return
 
 def panic():
     for chan in range(16):
@@ -76,35 +125,41 @@ def panic():
 
 def reset_status():
     panic()
-    status['layers_channels'] = [0]
-    status['layers_offset'] = [0]
-    status['layers_active'] = 1
-    status['split_note'] = NOTES_DICT['B3']
-    status['mode'] = 'play'
-    status['SW_active'] = [0, 0]
+    for key in initial_status:
+        status[key] = initial_status[key]
 
 def create_CC_event(channel, param, value):
     return (CC_CODE, DUMMY_FLAG, 0, DUMMY_QUEUE_NUMBER, (0, 0), (0, 0), (0, 0), (channel, 0, 0, 0, param, value))
 
-def send_ev(ev):
-    """
-        Performs channel routing
-    """
-    head = ev[:7]
-    data = ev[7][1:]
-    channel = status['layers_channels'][0]
-    event = head + (((channel,) + data),)
-    alsaseq.output(event)
+def create_note_on_event(channel, note, velocity):
+    return (NOTEON_CODE, DUMMY_FLAG, 0, DUMMY_QUEUE_NUMBER, (0, 0), (0, 0), (0, 0), (channel, note, velocity, 0, 0))
 
-def check_connections_fail():
-    return False # TODO implement this function
+def create_note_off_event(channel, note):
+    return (NOTEON_CODE, DUMMY_FLAG, 0, DUMMY_QUEUE_NUMBER, (0, 0), (0, 0), (0, 0), (channel, note, 0, 0, 0))
 
-def connect_devices():
-    reset_status()
-    return # TODO implement this function
-#     Port 0 is input, port 1 is output. Connect ALSA client 129 (could be a musical keyboard or Virtual Keyboard) to the input port, and connect output port to ALSA client 130 (a MIDI to sound converter like Timidity):
-#       >>> alsaseq.connectfrom( 0, 129, 0 )
-#       >>> alsaseq.connectto( 1, 130, 0 )
+def change_event_paramenter(ev, channel=None, param_note=None, value_velocity=None):
+    evtype, flags, tag, queue, time_stamp, source, destination, original_data = ev
+    
+    note_event = evtype == NOTEON_CODE or evtype == NOTEOFF_CODE or evtype == NOTE_CODE or evtype == ATMONO_CODE
+    control_event = evtype == CC_CODE or evtype == AT_CODE or evtype == BEND_CODE or evtype == PGM_CHANGE_CODE
+
+    if not (note_event or control_event):
+        return ev
+    
+    if channel is None:
+        channel = original_data[0]
+    if param_note is None:
+        param_note = original_data[1 if note_event else 4]
+    if value_velocity is None:
+        value_velocity = original_data[2 if note_event else 5]
+
+    if note_event:
+        data = (channel, param_note, value_velocity) + original_data[3:]
+    else:
+        data = (channel,) + original_data[1:4]+ (param_note, value_velocity)
+
+    event = (evtype, flags, tag, queue, time_stamp, source, destination, data)
+    return event
 
 def init():
     for octave in range(-1, 12):
@@ -119,10 +174,6 @@ def init():
 
 def loop():
     while True:
-        if check_connections_fail():
-            print("Connections Failed...")
-            connect_devices()
-
         if alsaseq.inputpending():
             ev = alsaseq.input()
 
@@ -133,7 +184,7 @@ def loop():
                 param = data[4]
                 value = data[5]
                 if param == CC_FOOT_SW and value == HIGH:
-                    status['layers_channels'][0] = (status['layers_channels'][0] + 1) % MAX_CHANNEL
+                    status['voices_channels'][0] = (status['voices_channels'][0] + 1) % MAX_CHANNEL
                 elif param == CC_SW1:
                     status['SW_active'][0] = 1 if value == HIGH else 0
                 elif param == CC_SW2:
@@ -141,28 +192,28 @@ def loop():
                 elif param >= CC_USER_1 and param <= CC_USER_4 and value == HIGH:
                     chan = param - CC_USER_1 # CC_USER_1 TO CC_USER_4 ARE SEQUENTIAL IN VALUE
                     sw1, sw2 = status['SW_active']
-                    status['layers_channels'][0] = chan + 4*sw1 + 8*sw2
+                    status['voices_channels'][0] = chan + 4*sw1 + 8*sw2
                 # elif param == CC_PEDAL:
                 #     pass
                 elif param == CC_PANIC:
                     alsaseq.output(ev) # Direct output disconsidering channel routing
                 else:
-                    send_ev(ev)
+                    manage_output_event(ev)
 
-            elif evtype == AT_CODE:
-                send_ev(ev)
+            # elif evtype == AT_CODE:
+            #     pass
 
-            elif evtype == PGM_CHANGE_CODE:
-                send_ev(ev)
+            # elif evtype == PGM_CHANGE_CODE:
+            #     pass
 
-            elif evtype == NOTEON_CODE:
-                send_ev(ev)
+            # elif evtype == NOTEON_CODE:
+            #     pass
 
-            elif evtype == NOTEOFF_CODE:
-                send_ev(ev)
+            # elif evtype == NOTEOFF_CODE:
+            #     pass
             
             else:
-                send_ev(ev)
+                manage_output_event(ev)
 
 
 
