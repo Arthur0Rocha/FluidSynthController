@@ -13,7 +13,7 @@ DUMMY_FLAG = 1
 # CLIENT, PORT EVENTS FROM 60 TO 67
 
 BASE_NOTES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B']
-NOTES_DICT = {'C-1': 0, 'C0': 12, 'A0': 21, 'B3': 59} # TODO create this (until G9?)
+NOTES_DICT = {'C-1': 0, 'C0': 12, 'A0': 21, 'B3': 59} # This is being filled during init()
 NOTES_LIST = []
 
 HIGH = 127
@@ -57,60 +57,89 @@ CC_F8_KUSER4 = 21
 
 MAX_CHANNEL = 16
 
+EP_CHANNEL = 0
+STRINGS_CHANNEL = 1
+PIANO_CHANNEL = 2
+BASS_CHANNEL = 8
+DRUM_CHANNEL = 9
+
 ZONE_FULL = 0
 ZONE_LOWER = 1
 ZONE_HIGHER = 2
 
+# TODO # Modes: Play (Single and Combi), SongList, Edit, Drum(nBass), Sequencer
+
 initial_status = {
-    'voices_channels': [0, 14, 9, 5],
-    'voices_zones': [ZONE_HIGHER, ZONE_HIGHER, ZONE_LOWER, ZONE_FULL],
-    'voices_offset': [0, 0, 0, 0],
-    'voices_active': 1,
-    'split_note': NOTES_DICT['B3'],
-    'notes_hanging': [],
+    # General
     'mode': 'play',
-    'SW_active': [0, 0]
+    'SW_active': [0, 0],
+    'using_damper': [1] * MAX_CHANNEL,
+    'notes_hanging': [],
+    # Play Mode
+    # Single
+    'channel_single': 0,
+    # Combi
+    'voices_active': 3,
+    'split_note': NOTES_DICT['B3'],
+    'voices_zones': [ZONE_LOWER, ZONE_HIGHER, ZONE_HIGHER, ZONE_FULL],
+    'voices_channels': [BASS_CHANNEL, EP_CHANNEL, STRINGS_CHANNEL, PIANO_CHANNEL],
+    'voices_offset': [0, 0, 0, 0],
+    'voices_volumes': [1., 1., 1., 1.],
+    # SongList Mode
+    'current_song_index': 0,
 }
 
 status = {
-    'voices_channels': [0, 14, 9, 5],
-    'voices_zones': [ZONE_HIGHER, ZONE_HIGHER, ZONE_LOWER, ZONE_FULL],
-    'voices_offset': [0, 0, 0, 0],
-    'voices_active': 4,
-    'split_note': NOTES_DICT['B3'],
-    'notes_hanging': [],
-    'mode': 'play',
-    'SW_active': [0, 0]
+
 }
 
 def manage_output_event(ev):
     evtype = ev[0]
     if evtype == NOTEON_CODE:
-        split = status['split_note']
-        data = ev[7]
-        note = data[1]
-        for voice in range(status['voices_active']):
-            zone = status['voices_zones'][voice]
-            if zone == ZONE_FULL \
-                or (zone == ZONE_LOWER and note <= split) \
-                or (zone == ZONE_HIGHER and note > split):
-                out_note = note + status['voices_offset'][voice]
-                channel = status['voices_channels'][voice]
-                event = change_event_paramenter(ev, channel=channel, param_note=out_note)
-                status['notes_hanging'].append( (channel, note, out_note) )
-                alsaseq.output(event)
+        if status['mode'] == 'drum':
+            event = change_event_paramenter(ev, channel=DRUM_CHANNEL)
+            alsaseq.output(event)
+        else:
+            split = status['split_note']
+            data = ev[7]
+            note = data[1]
+            for voice in range(status['voices_active']):
+                zone = status['voices_zones'][voice]
+                if zone == ZONE_FULL \
+                    or (zone == ZONE_LOWER and note <= split) \
+                    or (zone == ZONE_HIGHER and note > split):
+                    out_note = note + status['voices_offset'][voice]
+                    channel = status['voices_channels'][voice]
+                    event = change_event_paramenter(ev, channel=channel, param_note=out_note)
+                    status['notes_hanging'].append( (channel, note, out_note) )
+                    alsaseq.output(event)
 
     elif evtype == NOTEOFF_CODE:
-        leng = len(status['notes_hanging'])
-        for index in reversed(range(leng)):
-            channel, note, out_note = status['notes_hanging'][index]
-            if note == ev[7][1]:
-                event = create_note_off_event(channel, out_note)
-                alsaseq.output(event)
-                del status['notes_hanging'][index]
+        if status['mode'] == 'drum':
+            event = change_event_paramenter(ev, channel=DRUM_CHANNEL)
+            alsaseq.output(event)
+        else:
+            leng = len(status['notes_hanging'])
+            for index in reversed(range(leng)):
+                channel, note, out_note = status['notes_hanging'][index]
+                if note == ev[7][1]:
+                    event = create_note_off_event(channel, out_note)
+                    alsaseq.output(event)
+                    del status['notes_hanging'][index]
 
-    # elif evtype == CC_CODE:
-    #     pass # TODO handle sustain over multiple channels
+    elif evtype == CC_CODE and ev[7][4] == CC_DAMPER:
+        if status['mode'] == 'drum':
+            if ev[7][5] == LOW:
+                event = create_note_off_event(DRUM_CHANNEL, NOTES_DICT['B1'])
+            else:
+                event = create_note_on_event(DRUM_CHANNEL, NOTES_DICT['B1'], ev[7][5])
+            alsaseq.output(event)
+        else:
+            for chan in range(MAX_CHANNEL):
+                if ev[7][5] == LOW or status['using_damper'][chan] == 1:
+                    event = change_event_paramenter(ev, channel=chan)
+                    alsaseq.output(event)
+
     else:
         for voice in range(status['voices_active']):
             channel = status['voices_channels'][voice]
@@ -170,6 +199,7 @@ def init():
             NOTES_DICT[note] = index
             
     alsaseq.client('FSynth-Controller', 1, 1, False)
+    print("Started ALSA Client: FSynth-Controller")
     reset_status()
 
 def loop():
