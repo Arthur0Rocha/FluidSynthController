@@ -1,7 +1,7 @@
 import alsaseq
 
-from constants import *
-from eventlib import change_event_paramenter, create_note_off_event, create_CC_event
+from .constants import *
+from .eventlib import change_event_paramenter, create_note_off_event, create_CC_event
 
 status = {}
 

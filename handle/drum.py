@@ -1,5 +1,5 @@
-from ..general.constants import DRUM_CHANNEL, LOW, NOTES_DICT
-from ..general import context, eventlib
+from general.constants import DRUM_CHANNEL, LOW, NOTES_DICT
+from general import context, eventlib
 
 def noteon(event):
     channel = DRUM_CHANNEL

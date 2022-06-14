@@ -1,4 +1,4 @@
-from ..general import context, eventlib
+from general import context, eventlib
 
 def noteon(event):
     channel = get_channel()

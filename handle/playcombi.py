@@ -1,6 +1,6 @@
-from ..general.constants import *
-from ..general import context
-from ..general.eventlib import change_event_paramenter
+from general.constants import *
+from general import context
+from general.eventlib import change_event_paramenter
 
 def noteon(event):
     split = context.get('split_note')

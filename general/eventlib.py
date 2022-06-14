@@ -1,4 +1,4 @@
-from constants import *
+from .constants import *
 
 def create_CC_event(channel, param, value):
     return (CC_CODE, DUMMY_FLAG, 0, DUMMY_QUEUE_NUMBER, (0, 0), (0, 0), (0, 0), (channel, 0, 0, 0, param, value))
