@@ -1,13 +1,22 @@
-import alsaseq
-
 from .constants import *
-from .eventlib import change_event_paramenter, create_note_off_event, create_CC_event
+from .eventlib import change_event_paramenter, create_note_off_event
+
+all_modes = [
+    'play_single', 
+    'play_combi', 
+    'drum', 
+    'sequencer',
+    'song_list',
+    'edit', 
+    'select', 
+    ]
 
 status = {}
 
 initial_status = {
     # General
     'mode': 'play_single',
+    'last_playable_mode': 'play_single',
     'SW_active': [0, 0],
     'using_damper': [1] * MAX_CHANNEL,
     'notes_hanging': [],
@@ -15,19 +24,17 @@ initial_status = {
     # Single
     'channel_single': 0,
     # Combi
-    'voices_active': 2,
+    'voices_active': 3,
     'split_note': NOTES_DICT['B3'],
     'voices_zones': [ZONE_LOWER, ZONE_HIGHER, ZONE_HIGHER, ZONE_FULL],
-    'voices_channels': [BASS_CHANNEL, DRUM_CHANNEL, STRINGS_CHANNEL, PIANO_CHANNEL],
-    'voices_offset': [-24, -24, 0, 0],
+    'voices_channels': [BASS_CHANNEL, PIANO_CHANNEL, STRINGS_CHANNEL, EP_CHANNEL],
+    'voices_offset': [-24, -12, 0, 0],
     'voices_volumes': [1., 1., 1., 1.],
     # SongList Mode
     'current_song_index': 0,
 }
 
-def init_context(client_name):
-    alsaseq.client(client_name, 1, 1, False)
-    print(f"Started ALSA Client: {client_name}")
+def init_context():
     reset_context()
 
 def reset_context():
@@ -62,6 +69,17 @@ def get_SW2():
 
 ################################ SETTERS ################################
 
+def set_mode(value):
+    if value not in all_modes:
+        print('Wrong mode name. Ignored.')
+        return
+    if status['mode'] not in ['select', 'edit']:
+        status['last_playable_mode'] = status['mode']
+    status['mode'] = value
+
+def switch_back_mode():
+    status['mode'] = status['last_playable_mode']
+
 def set_channel_single(channel):
     if channel < 0 or channel >= MAX_CHANNEL:
         print('Channel out of range. Not set.')
@@ -89,50 +107,29 @@ def set_SW2(value):
         return
     print("Invalid value for SW")
 
-################################# OUTPUT #################################
-
-def panic():
-    for chan in range(16):
-        send(create_CC_event(chan, CC_PANIC, 0))
+################################# EVENTS #################################
 
 def noteon(event, query_note):
-    evtype = event[0]
-    if evtype != NOTEON_CODE:
-        print("Called context note on in wrong event!")
-        return
     channel = event[7][0]
     played_note = event[7][1]
     status['notes_hanging'].append( (channel, query_note, played_note) )
-    send(event)
 
 def noteoff(event):
-    if event[0] != NOTEOFF_CODE:
-        print("Called context note off in wrong event!")
-        return
     leng = len(status['notes_hanging'])
+    noteoff_evn_list = []
     for index in reversed(range(leng)):
         channel, query_note, played_note = status['notes_hanging'][index]
         if query_note == event[7][1]:
             event = create_note_off_event(channel, played_note)
-            send(event)
+            noteoff_evn_list.append(event)
             del status['notes_hanging'][index]
+    return noteoff_evn_list
 
 def damper(event):
-    if event[0] != CC_CODE or event[7][4] != CC_DAMPER:
-        print("Called context damper in wrong event!")
-        return
+    event_list = []
     for chan in range(MAX_CHANNEL):
         if event[7][5] == LOW or status['using_damper'][chan] == 1:
             event = change_event_paramenter(event, channel=chan)
-            send(event)
-
-########################### ALSA INTERFACE ##############################
-
-def has_new_event():
-    return alsaseq.inputpending()
-
-def read_event():
-    return alsaseq.input()
-
-def send(event):
-    alsaseq.output(event)
+            event_list.append(event)
+    return event_list
+            

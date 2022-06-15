@@ -1,5 +1,5 @@
 from general.constants import *
-from general import context
+from general import aseq, context
 from general.eventlib import change_event_paramenter
 
 def noteon(event):
@@ -14,13 +14,16 @@ def noteon(event):
             out_note = note + context.get_voice_offset(voice)
             channel = context.get_voice_channel(voice)
             event = change_event_paramenter(event, channel=channel, param_note=out_note)
-            context.noteon(event=event, query_note=note)
+            aseq.noteon(event=event, query_note=note)
 
 def noteoff(event):
-    context.noteoff(event)
+    aseq.noteoff(event)
+
+def damper(event):
+    aseq.damper(event)
 
 def other(event):
     for voice in range(context.get('voices_active')):
         channel = context.get_voice_channel(voice)
         event = change_event_paramenter(event, channel=channel)
-        context.send(event)
+        aseq.send(event)

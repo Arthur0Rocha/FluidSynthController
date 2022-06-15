@@ -1,19 +1,20 @@
-from general import context, eventlib
+from general import aseq, context, eventlib
 
 def noteon(event):
     channel = get_channel()
-    note = event[7][1]
     event = eventlib.change_event_paramenter(event, channel=channel)
-    context.noteon(event=event, query_note=note)
-    
+    aseq.noteon(event)
 
 def noteoff(event):
-    context.noteoff(event)
+    aseq.noteoff(event)
+
+def damper(event):
+    aseq.damper(event)
 
 def other(event):
     channel = get_channel()
     event = eventlib.change_event_paramenter(event, channel=channel)
-    context.send(event)
+    aseq.send(event)
     
 def get_channel():
     return context.get_channel_single()
