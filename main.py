@@ -1,3 +1,5 @@
+import time
+
 from general.constants import *
 from general import context
 from handle import drum, playsingle as sing, playcombi as comb
@@ -45,7 +47,8 @@ def init():
 
 def loop():
     while True:
-        if context.has_new_event():
+        time.sleep(0.001)
+        while context.has_new_event():
             ev = context.read_event()
 
             evtype = ev[0]
