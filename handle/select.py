@@ -15,7 +15,7 @@ def user(value):
     elif value == 1:
         context.set_mode('play_combi')
     elif value == 2:
-        context.set_mode('drum')
+        context.set_mode('drum_n_bass')
     elif value == 3:
         context.set_mode('sequencer')
     else:

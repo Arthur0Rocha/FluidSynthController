@@ -4,7 +4,7 @@ from .eventlib import change_event_paramenter, create_note_off_event
 all_modes = [
     'play_single', 
     'play_combi', 
-    'drum', 
+    'drum_n_bass',
     'sequencer',
     'song_list',
     'edit', 
@@ -30,6 +30,9 @@ initial_status = {
     'voices_channels': [BASS_CHANNEL, PIANO_CHANNEL, STRINGS_CHANNEL, EP_CHANNEL],
     'voices_offset': [-24, -12, 0, 0],
     'voices_volumes': [1., 1., 1., 1.],
+    # Drum and Bass
+    'drum_n_bass_config': DRUM_N_BASS_DRUM_NOREMP,
+    'drum_n_bass_damper_behaviour': 'kick',
     # SongList Mode
     'current_song_index': 0,
 }
@@ -107,21 +110,34 @@ def set_SW2(value):
         return
     print("Invalid value for SW")
 
+def update_drum_n_bass_config():
+    sw1, sw2 = status['SW_active']
+    if sw1 > 0:
+        if sw2 > 0:
+            status['drum_n_bass_config'] = DRUM_N_BASS_COMB_CONFIG
+        else:
+            status['drum_n_bass_config'] = DRUM_N_BASS_BASS_CONFIG
+    else:
+        if sw2 > 0:
+            status['drum_n_bass_config'] = DRUM_N_BASS_DRUM_CONFIG
+        else:
+            status['drum_n_bass_config'] = DRUM_N_BASS_DRUM_NOREMP
+
 ################################# EVENTS #################################
 
-def noteon(event, query_note):
+def noteon(event, key_note):
     channel = event[7][0]
-    played_note = event[7][1]
-    status['notes_hanging'].append( (channel, query_note, played_note) )
-
+    sound_note = event[7][1]
+    status['notes_hanging'].append( (channel, key_note, sound_note) )
+    
 def noteoff(event):
     leng = len(status['notes_hanging'])
     noteoff_evn_list = []
     for index in reversed(range(leng)):
-        channel, query_note, played_note = status['notes_hanging'][index]
-        if query_note == event[7][1]:
-            event = create_note_off_event(channel, played_note)
-            noteoff_evn_list.append(event)
+        channel, key_note, sound_note = status['notes_hanging'][index]
+        if key_note == event[7][1]:
+            ev = create_note_off_event(channel, sound_note)
+            noteoff_evn_list.append(ev)
             del status['notes_hanging'][index]
     return noteoff_evn_list
 

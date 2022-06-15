@@ -2,7 +2,7 @@ import time
 
 from general.constants import *
 from general import context, aseq
-from handle import drum, playsingle as sing, playcombi as comb, select
+from handle import drumNbass as drum_n_bass, playsingle as sing, playcombi as comb, select
 
 def init():
     aseq.init_client('FSynth-Controller')
@@ -20,13 +20,10 @@ def manage_context_update(ev):
         value = ev[7][5]
         if param == CC_SW1: # All contexts
             context.set_SW1(value)
-            return
         elif param == CC_SW2: # All contexts
             context.set_SW2(value)
-            return
         elif param == CC_Y2:
             select.y2(value)
-
     
     if context.get_mode() == 'play_single':
         if evtype == CC_CODE:
@@ -36,23 +33,29 @@ def manage_context_update(ev):
                 # CC_USER_1 TO CC_USER_4 ARE SEQUENTIAL IN VALUE
                 sing.user(param - CC_USER_1)
             else:
-                print("Ignoring CC event...")
+                pass # print("Ignoring CC event...")
     
     elif context.get_mode() == 'play_combi':
-        print("Still not implemented") # TODO
+        pass # print("Still not implemented") # TODO
         
     elif context.get_mode() == 'drum':
-        print("Still not implemented") # TODO
+        pass # print("Still not implemented") # TODO
+
+    elif context.get_mode() == 'drum_n_bass':
+        if param in CC_SW:
+            context.update_drum_n_bass_config()
+        else:
+            pass # print("Ignoring CC event...")
 
     elif context.get_mode() == 'select':
         if evtype == CC_CODE:
             if param in CC_USER and value == HIGH:
                 select.user(param - CC_USER_1)
             else:
-                print("Ignoring CC event...")
+                pass # print("Ignoring CC event...")
     
     else:
-        print("Attempt of context update in an undefined context mode...")
+        pass # print("Attempt of context update in an undefined context mode...")
 
 def manage_output_event(ev):
     evtype = ev[0]
@@ -74,15 +77,15 @@ def manage_output_event(ev):
             comb.damper(ev)
         else:
             comb.other(ev)
-    elif context.get_mode() == 'drum':
+    elif context.get_mode() == 'drum_n_bass':
         if evtype == NOTEON_CODE:
-            drum.noteon(ev)
+            drum_n_bass.noteon(ev) # TODO
         elif evtype == NOTEOFF_CODE:
-            drum.noteoff(ev)
+            drum_n_bass.noteoff(ev) # TODO
         elif evtype == CC_CODE and ev[7][4] == CC_DAMPER:
-            drum.damper(ev)
+            drum_n_bass.damper(ev) # TODO
         else:
-            drum.other(ev)
+            drum_n_bass.other(ev) # TODO
     elif context.get_mode() == 'select':
         if evtype == NOTEON_CODE:
             pass # Ignoring note on event on select mode
@@ -93,7 +96,7 @@ def manage_output_event(ev):
         else:
             pass # Ignoring other events
     else:
-        print("Attempt of output event in an undefined context mode...")        
+        pass # print("Attempt of output event in an undefined context mode...")        
 
 CONTEXT_UPDATE_CC_PARAM_VECTOR = \
     CC_SW + CC_USER + CC_FN + CC_Y + CC_2PEDALS + [CC_ATTACK, CC_VOLUME]
@@ -117,7 +120,7 @@ def loop():
                     manage_output_event(ev)
 
             elif evtype == PGM_CHANGE_CODE:
-                print("Ignoring program change event...")
+                pass # print("Ignoring program change event...")
 
             else: # NOTES, AT, BEND
                 manage_output_event(ev)

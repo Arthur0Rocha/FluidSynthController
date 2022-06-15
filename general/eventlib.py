@@ -7,7 +7,7 @@ def create_note_on_event(channel, note, velocity):
     return (NOTEON_CODE, DUMMY_FLAG, 0, DUMMY_QUEUE_NUMBER, (0, 0), (0, 0), (0, 0), (channel, note, velocity, 0, 0))
 
 def create_note_off_event(channel, note):
-    return (NOTEON_CODE, DUMMY_FLAG, 0, DUMMY_QUEUE_NUMBER, (0, 0), (0, 0), (0, 0), (channel, note, 0, 0, 0))
+    return (NOTEOFF_CODE, DUMMY_FLAG, 0, DUMMY_QUEUE_NUMBER, (0, 0), (0, 0), (0, 0), (channel, note, 0, 0, 0))
 
 def change_event_paramenter(ev, channel=None, param_note=None, value_velocity=None):
     evtype, flags, tag, queue, time_stamp, source, destination, original_data = ev

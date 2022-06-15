@@ -14,14 +14,14 @@ def panic():
     for chan in range(16):
         send(create_CC_event(chan, CC_PANIC, 0))
 
-def noteon(event, query_note=None):
+def noteon(event, key_note=None):
     evtype = event[0]
     if evtype != NOTEON_CODE:
         print("Called note on in wrong event!")
         return
-    if query_note is None:
-        query_note = event[7][1]
-    context.noteon(event, query_note)
+    if key_note is None:
+        key_note = event[7][1]
+    context.noteon(event, key_note)
     send(event)
 
 def noteoff(event):
