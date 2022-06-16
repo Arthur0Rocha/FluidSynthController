@@ -35,6 +35,7 @@ CC_BANK_LSB = 32
 
 CC_Y1 = 1
 CC_Y2 = 2
+CC_03 = 3
 CC_Y = [CC_Y1, CC_Y2]
 CC_PEDAL = 4
 CC_VOLUME = 7
@@ -87,6 +88,8 @@ DRUM_N_BASS_DRUM_NOREMP = 4
 
 Y2_VALUE_SUPERIOR_THRESHOLD = 77
 Y2_VALUE_INFERIOR_THRESHOLD = 52
+
+MVAVE_VALUE = 5
 
 def __init_notes_dict__():
     for octave in range(-1, 12):
