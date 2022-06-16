@@ -31,6 +31,8 @@ BEND_CODE = 13
 CC_BANK_MSB = 0
 CC_BANK_LSB = 32
 
+# M-VAVE factory: A-D -> PGMCHNG 0-3 / E,F -> CC 2(value=5), 3 (value=5) / PEDAL -> CC 7 (value=0-127)
+
 CC_Y1 = 1
 CC_Y2 = 2
 CC_Y = [CC_Y1, CC_Y2]
