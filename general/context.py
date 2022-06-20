@@ -20,6 +20,7 @@ initial_status = {
     'SW_active': [0, 0],
     'using_damper': [1] * MAX_CHANNEL,
     'notes_hanging': [],
+    'm_vave_port': None,
     # Play Mode
     # Single
     'channel_single': 0,
@@ -122,6 +123,9 @@ def update_drum_n_bass_config():
             status['drum_n_bass_config'] = DRUM_N_BASS_DRUM_CONFIG
         else:
             status['drum_n_bass_config'] = DRUM_N_BASS_DRUM_NOREMP
+
+def set_m_vave_port(port_number):
+    status['m_vave_port'] = port_number
 
 ################################# EVENTS #################################
 

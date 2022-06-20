@@ -1,7 +1,7 @@
 import time
 
 from general.constants import *
-from general import context, aseq
+from general import context, aseq, aconnect_monitor, mvave
 from handle import drumNbass as drum_n_bass, playsingle as sing, playcombi as comb, select
 
 def init():
@@ -102,10 +102,16 @@ CONTEXT_UPDATE_CC_PARAM_VECTOR = \
     CC_SW + CC_USER + CC_FN + CC_Y + CC_2PEDALS + [CC_ATTACK, CC_VOLUME]
 
 def loop():
+    clients, ports, connections = aconnect_monitor.run()
+    if aconnect_monitor.M_VAVE_NAME in clients:
+        context.set_m_vave_port(int(ports[aconnect_monitor.M_VAVE_NAME]))
     while True:
         time.sleep(0.001)
         while aseq.has_new_event():
             ev = aseq.read_event()
+            mvaven = context.get('m_vave_port')
+            if (mvaven is not None) and (int(ev[5][0]) == int(mvaven)):
+                ev = mvave.remap_input(ev)
             evtype = ev[0]
             data = ev[7]
             
