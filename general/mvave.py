@@ -3,7 +3,7 @@ from .eventlib import create_CC_event
 
 VERBOSE = False
 
-def remap_input(event):
+def remap_input(event, invert_pedal=True):
     evtype = event[0]
     channel = event[7][0]
 
@@ -41,9 +41,11 @@ def remap_input(event):
                 print("F")
             return create_CC_event(channel, CC_FOOT_SW, HIGH) # F
         elif param == CC_VOLUME:
+            if invert_pedal:
+                value = HIGH - value
             if VERBOSE:
-                print(f"PEDAL - {HIGH-value:03d}")
-            return create_CC_event(channel, CC_PEDAL, HIGH-value) # PEDAL
+                print(f"PEDAL - {value:03d}")
+            return create_CC_event(channel, CC_PEDAL, value) # PEDAL
         else:
             if VERBOSE:
                 print("W2")
