@@ -42,7 +42,7 @@ def remap_input(event):
             return create_CC_event(channel, CC_FOOT_SW, HIGH) # F
         elif param == CC_VOLUME:
             if VERBOSE:
-                print(f"VOL - {HIGH-value:03d}")
+                print(f"PEDAL - {HIGH-value:03d}")
             return create_CC_event(channel, CC_PEDAL, HIGH-value) # PEDAL
         else:
             if VERBOSE:

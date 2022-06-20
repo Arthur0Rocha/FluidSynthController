@@ -3,11 +3,11 @@ from .eventlib import change_event_paramenter, create_note_off_event
 
 all_modes = [
     'play_single', 
-    'play_combi', 
+    'play_combi', # TODO evaluate the real need for splits and layers
     'drum_n_bass',
-    'sequencer',
-    'song_list',
-    'edit', 
+    'sequencer', # TODO first priority
+    'song_list', # TODO decide how it would work and if it is really necessary
+    'edit', # TODO second priority
     'select', 
     ]
 

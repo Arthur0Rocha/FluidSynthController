@@ -4,9 +4,19 @@ from general.constants import *
 from general import context, aseq, aconnect_monitor, mvave
 from handle import drumNbass as drum_n_bass, playsingle as sing, playcombi as comb, select
 
+def connect_devices():
+    clients, ports = aconnect_monitor.run()[:2]
+    if aconnect_monitor.M_VAVE_NAME in clients:
+        context.set_m_vave_port(int(ports[aconnect_monitor.M_VAVE_NAME]))
+
+def reset_all_connections():
+    aconnect_monitor.disconnect_all()
+    connect_devices()
+
 def init():
     aseq.init_client('FSynth-Controller')
     context.init_context()
+    connect_devices()
 
 def reset_status():
     aseq.panic()
@@ -32,20 +42,30 @@ def manage_context_update(ev):
             elif param in CC_USER and value == HIGH:
                 # CC_USER_1 TO CC_USER_4 ARE SEQUENTIAL IN VALUE
                 sing.user(param - CC_USER_1)
+            elif param == CC_FOOT_SW:
+                context.set_mode('play_combi')
+            elif param == CC_PORTAMENTO_SW:
+                context.set_mode('drum_n_bass')
             else:
                 pass # print("Ignoring CC event...")
     
     elif context.get_mode() == 'play_combi':
-        pass # print("Still not implemented") # TODO
+        if evtype == CC_CODE:
+            if param == CC_FOOT_SW:
+                context.set_mode('drum_n_bass')
+            elif param == CC_PORTAMENTO_SW:
+                context.set_mode('play_single')
         
-    elif context.get_mode() == 'drum':
-        pass # print("Still not implemented") # TODO
-
     elif context.get_mode() == 'drum_n_bass':
-        if param in CC_SW:
-            context.update_drum_n_bass_config()
-        else:
-            pass # print("Ignoring CC event...")
+        if evtype == CC_CODE:
+            if param in CC_SW:
+                context.update_drum_n_bass_config()
+            if param == CC_FOOT_SW:
+                context.set_mode('play_single')
+            elif param == CC_PORTAMENTO_SW:
+                context.set_mode('play_combi')
+            else:
+                pass # print("Ignoring CC event...")
 
     elif context.get_mode() == 'select':
         if evtype == CC_CODE:
@@ -102,9 +122,6 @@ CONTEXT_UPDATE_CC_PARAM_VECTOR = \
     CC_SW + CC_USER + CC_FN + CC_Y + CC_2PEDALS + [CC_ATTACK, CC_VOLUME]
 
 def loop():
-    clients, ports, connections = aconnect_monitor.run()
-    if aconnect_monitor.M_VAVE_NAME in clients:
-        context.set_m_vave_port(int(ports[aconnect_monitor.M_VAVE_NAME]))
     while True:
         time.sleep(0.001)
         while aseq.has_new_event():
@@ -123,7 +140,7 @@ def loop():
                 elif param in CONTEXT_UPDATE_CC_PARAM_VECTOR:
                     manage_context_update(ev)
                 else:
-                    manage_output_event(ev)
+                    manage_output_event(ev) # TODO or should be ignored?
 
             elif evtype == PGM_CHANGE_CODE:
                 pass # print("Ignoring program change event...")
