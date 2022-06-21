@@ -80,6 +80,7 @@ def set_mode(value):
     if status['mode'] not in ['select', 'edit']:
         status['last_playable_mode'] = status['mode']
     status['mode'] = value
+    print(f'Entering {value}')
 
 def switch_back_mode():
     status['mode'] = status['last_playable_mode']

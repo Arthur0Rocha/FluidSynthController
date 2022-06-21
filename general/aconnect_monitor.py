@@ -59,17 +59,17 @@ def make_connections(clients, ports, connections):
     if FSYNTH_CONTROLLER_NAME in clients \
         and QSYNTH_NAME in clients \
             and (ports[FSYNTH_CONTROLLER_NAME], ports[QSYNTH_NAME]) not in connections:
-        os.system(f"aconnect {ports[FSYNTH_CONTROLLER_NAME]} {ports[QSYNTH_NAME]} > log")
+        os.system(f"aconnect {ports[FSYNTH_CONTROLLER_NAME]}:1 {ports[QSYNTH_NAME]} > log")
 
     if FSYNTH_CONTROLLER_NAME in clients \
         and FLUID_SYNTH_NAME in clients \
             and (ports[FSYNTH_CONTROLLER_NAME], ports[FLUID_SYNTH_NAME]) not in connections:
-        os.system(f"aconnect {ports[FSYNTH_CONTROLLER_NAME]} {ports[FLUID_SYNTH_NAME]} > log")
+        os.system(f"aconnect {ports[FSYNTH_CONTROLLER_NAME]}:1 {ports[FLUID_SYNTH_NAME]} > log")
 
-    if M_VAVE_NAME in clients \
-        and MIDI_THROUGH_NAME in clients \
-            and (ports[M_VAVE_NAME], ports[MIDI_THROUGH_NAME]) not in connections:
-        os.system(f"aconnect {ports[M_VAVE_NAME]} {ports[MIDI_THROUGH_NAME]} > log")
+    # if M_VAVE_NAME in clients \
+    #     and MIDI_THROUGH_NAME in clients \
+    #         and (ports[M_VAVE_NAME], ports[MIDI_THROUGH_NAME]) not in connections:
+    #     os.system(f"aconnect {ports[M_VAVE_NAME]} {ports[MIDI_THROUGH_NAME]} > log")
 
     if M_VAVE_NAME in clients \
         and FSYNTH_CONTROLLER_NAME in clients \

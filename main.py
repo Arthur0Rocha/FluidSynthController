@@ -2,7 +2,7 @@ import time
 
 from general.constants import *
 from general import context, aseq, aconnect_monitor, mvave
-from handle import drumNbass as drum_n_bass, playsingle as sing, playcombi as comb, select
+from handle import drumNbass as drum_n_bass, playsingle as sing, playcombi as comb, select, sequencer
 
 def connect_devices():
     clients, ports = aconnect_monitor.run()[:2]
@@ -37,32 +37,32 @@ def manage_context_update(ev):
     
     if context.get_mode() == 'play_single':
         if evtype == CC_CODE:
-            if param == CC_FOOT_SW and value == HIGH:
-                sing.set_next_channel()
-            elif param in CC_USER and value == HIGH:
+            if param in CC_USER and value == HIGH:
                 # CC_USER_1 TO CC_USER_4 ARE SEQUENTIAL IN VALUE
                 sing.user(param - CC_USER_1)
-            elif param == CC_FOOT_SW:
+            elif param == CC_FOOT_SW and value == HIGH:
                 context.set_mode('play_combi')
-            elif param == CC_PORTAMENTO_SW:
+            elif param == CC_PORTAMENTO_SW and value == HIGH:
                 context.set_mode('drum_n_bass')
             else:
                 pass # print("Ignoring CC event...")
     
     elif context.get_mode() == 'play_combi':
         if evtype == CC_CODE:
-            if param == CC_FOOT_SW:
+            if param == CC_FOOT_SW and value == HIGH:
                 context.set_mode('drum_n_bass')
-            elif param == CC_PORTAMENTO_SW:
+            elif param == CC_PORTAMENTO_SW and value == HIGH:
                 context.set_mode('play_single')
+            else:
+                pass
         
     elif context.get_mode() == 'drum_n_bass':
         if evtype == CC_CODE:
             if param in CC_SW:
                 context.update_drum_n_bass_config()
-            if param == CC_FOOT_SW:
+            if param == CC_FOOT_SW and value == HIGH:
                 context.set_mode('play_single')
-            elif param == CC_PORTAMENTO_SW:
+            elif param == CC_PORTAMENTO_SW and value == HIGH:
                 context.set_mode('play_combi')
             else:
                 pass # print("Ignoring CC event...")
@@ -150,4 +150,5 @@ def loop():
 
 if __name__ == "__main__":
     init()
-    loop()
+    # loop()
+    sequencer.play()
