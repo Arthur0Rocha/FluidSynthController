@@ -149,6 +149,9 @@ def loop():
                 manage_output_event(ev)
 
 if __name__ == "__main__":
-    init()
-    # loop()
-    sequencer.play()
+    try:
+        init()
+        # loop()
+        sequencer.play()
+    except KeyboardInterrupt:
+        aseq.panic()

@@ -13,6 +13,21 @@ DUMMY_FLAG = 1
 BASE_NOTES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B']
 NOTES_DICT = {'C-1': 0, 'C0': 12, 'A0': 21, 'B3': 59} # This is being filled during init()
 NOTES_LIST = []
+KEYS_AND_RELATIVES = {  'C'  : 'Am' , 'C#' : 'A#m', 
+                        'D'  : 'Bm' , 'D#' : 'Cm' , 
+                        'E'  : 'C#m',
+                        'F'  : 'Dm' , 'F#' : 'D#m', 
+                        'G'  : 'Em' , 'G#' : 'Fm' , 
+                        'A'  : 'F#m', 'A#' : 'Gm' , 
+                        'B'  : 'G#m',
+                        'Am' : 'C'  , 'A#m': 'C#' , 
+                        'Bm' : 'D'  , 'Cm' : 'D#' ,
+                        'C#m': 'E'  ,
+                        'Dm' : 'F'  , 'D#m': 'F#' , 
+                        'Em' : 'G'  , 'Fm' : 'G#' ,
+                        'F#m': 'A'  , 'Gm' : 'A#' ,
+                        'G#m': 'B'
+                    }
 
 HIGH = 127
 LOW = 0
@@ -110,3 +125,9 @@ OPEN_HIHAT_NOTE = NOTES_DICT['A#2']
 CRASH1_NOTE = NOTES_DICT['C#3']
 CRASH2_NOTE = NOTES_DICT['E3']
 RIDE_NOTE = NOTES_DICT['D#3']
+TOM1_NOTE = NOTES_DICT['D3']
+TOM2_NOTE = NOTES_DICT['C3']
+TOM3_NOTE = NOTES_DICT['B2']
+TOM4_NOTE = NOTES_DICT['A2']
+FLOOR1_NOTE = NOTES_DICT['G2']
+FLOOR2_NOTE = NOTES_DICT['F2']
