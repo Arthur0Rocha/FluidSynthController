@@ -12,10 +12,20 @@ HUMAN_FACTOR_AMPLITUDE = 5
 
 class Duration(Enum):
     WHOLE = 1
-    HALF = 2
-    QUARTER = 4
-    EIGHTH = 8
-    SIXTEENTH = 16
+    HALF = 1/2
+    QUARTER = 1/4
+    EIGHTH = 1/8
+    SIXTEENTH = 1/16
+    
+    HALF_DOT = HALF + QUARTER
+    QUARTER_DOT = QUARTER + EIGHTH
+    EIGHTH_DOT = EIGHTH + SIXTEENTH
+
+class DurationLegatto:
+    def __init__(self, legatto_list: List[Duration]) -> None:
+        self.__leg = legatto_list
+    def value(self):
+        return sum([l.value for l in self.__leg])
 
 class Loudness(Enum):
     SILENT = 0
@@ -32,34 +42,31 @@ def loudness_to_velocity(loud: Loudness):
     return max(LOW,min(HIGH,int(random.gauss(loud.value, HUMAN_FACTOR_AMPLITUDE))))
 
 class Note:
-    def __init__(self, duration: Duration, pitch: int, loudness: Loudness) -> None:
-        self.__dur = duration
+    def __init__(self, duration: Union[Duration, DurationLegatto], pitch: int, loudness: Loudness) -> None:
+        self.__duration = duration
+        self.__dur = duration.value if isinstance(duration, Duration) else duration.value()
         self.__pit = pitch
         self.__loud = loudness
-    def get_note(self):
-        return self.__pit
     def get_velocity(self):
         return loudness_to_velocity(self.__loud)
-    def get_duration(self):
-        return self.__dur
     def to_midi_note(self, channel, bar_slots):
-        return MIDINote(channel=channel, note=self.__pit, velocity=self.get_velocity(), duration_slots=bar_slots//self.__dur.value)
+        return MIDINote(channel=channel, note=self.__pit, velocity=self.get_velocity(), duration_slots=round(bar_slots*self.__dur))
     def fff(self):
-        return Note(self.__dur, self.__pit, Loudness.FFF)
+        return Note(self.__duration, self.__pit, Loudness.FFF)
     def ff(self):
-        return Note(self.__dur, self.__pit, Loudness.FF)
+        return Note(self.__duration, self.__pit, Loudness.FF)
     def f(self):
-        return Note(self.__dur, self.__pit, Loudness.F)
+        return Note(self.__duration, self.__pit, Loudness.F)
     def mf(self):
-        return Note(self.__dur, self.__pit, Loudness.MF)
+        return Note(self.__duration, self.__pit, Loudness.MF)
     def mp(self):
-        return Note(self.__dur, self.__pit, Loudness.MP)
+        return Note(self.__duration, self.__pit, Loudness.MP)
     def p(self):
-        return Note(self.__dur, self.__pit, Loudness.P)
+        return Note(self.__duration, self.__pit, Loudness.P)
     def pp(self):
-        return Note(self.__dur, self.__pit, Loudness.PP)
+        return Note(self.__duration, self.__pit, Loudness.PP)
     def ppp(self):
-        return Note(self.__dur, self.__pit, Loudness.PPP)
+        return Note(self.__duration, self.__pit, Loudness.PPP)
 
 class BassDrumNote(Note):
     def __init__(self, loudness: Loudness = Loudness.F) -> None:
@@ -145,20 +152,17 @@ class RideDrumNote(Note):
         super().__init__(Duration.EIGHTH, RIDE_NOTE, loudness)
 
 class Harmony:
-    def __init__(self, duration: Duration, notes_pitch: List[int], loudness: Loudness) -> None:
-        self.__dur = duration
+    def __init__(self, duration: Union[Duration, DurationLegatto], notes_pitch: List[int], loudness: Loudness) -> None:
+        self.__duration = duration
+        self.__dur = duration.value if isinstance(duration, Duration) else duration.value()
         self.__notes_pitch = notes_pitch
         self.__loud = loudness
-    def get_notes(self):
-        return self.__notes_pitch
     def get_velocity(self):
         return loudness_to_velocity(self.__loud)
-    def get_duration(self):
-        return self.__dur
     def to_note_list(self):
-        return [Note(self.__dur, pit, self.__loud) for pit in self.__notes_pitch]
+        return [Note(self.__duration, pit, self.__loud) for pit in self.__notes_pitch]
     def to_midi_note_list(self, channel, bar_slots):
-        return [Note(self.__dur, pit, self.__loud).to_midi_note(channel, bar_slots) for pit in self.__notes_pitch]
+        return [Note(self.__duration, pit, self.__loud).to_midi_note(channel, bar_slots) for pit in self.__notes_pitch]
 
 MusicalElement = Union[Note, Harmony]
 
@@ -246,7 +250,7 @@ class Bass(BarS):
         super().__init__(bar_list)
     def get_midi_list(self, absolute_position):
         bar_index = int(absolute_position / self.slots())
-        pos = absolute_position % self.__slots
+        pos = absolute_position % self._BarS__slots
         return [el.to_midi_note(BASS_CHANNEL, self.slots()) for el in self.get_elements(bar_index, pos)]
 
 class OtherInstrument(BarS):
@@ -255,7 +259,7 @@ class OtherInstrument(BarS):
         self.__channel = channel
     def get_midi_list(self, absolute_position):
         bar_index = int(absolute_position / self.slots())
-        pos = absolute_position % self.__slots
+        pos = absolute_position % self._BarS__slots
         return [el.to_midi_note(self.__channel, self.slots()) for el in self.get_elements(bar_index, pos)]
 
 class Instruments:
@@ -305,7 +309,7 @@ class PlaySequencer:
         self.__current_position = 0
         self.__offQ = MIDIOffQueue()
     def play(self):
-        while not self.__intruments.all_ended(self.__current_position):
+        while not self.__intruments.all_ended(self.__current_position) or not self.__offQ.isempty():
             notes = self.__intruments.get_midi_list(self.__current_position)
             for n in notes:
                 aseq.send(n.on())
@@ -350,3 +354,5 @@ class MIDIOffQueue:
         out = list(map(lambda x: x.off(), self.__queue[0]))
         del self.__queue[0]
         return out
+    def isempty(self):
+        return len(self.__queue) == 0
