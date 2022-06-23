@@ -311,11 +311,11 @@ class PlaySequencer:
     def play(self):
         while not self.__intruments.all_ended(self.__current_position) or not self.__offQ.isempty():
             notes = self.__intruments.get_midi_list(self.__current_position)
-            for n in notes:
-                aseq.send(n.on())
             self.__offQ.add_list(notes)
             for n in self.__offQ.get_next():
                 aseq.send(n)
+            for n in notes:
+                aseq.send(n.on())
             self.__current_position += 1
             time.sleep(self.__time_sleep)
             

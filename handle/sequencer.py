@@ -215,8 +215,187 @@ def play_hello():
     # Sequencer
     PlaySequencer(BPM, SIGN, KEY, Instruments(drum, bass, [ep])).play()
 
+def play_dont_dream_its_over():
+    
+    SIGN = 4
+    QUANT = 4
+    BPM = 80
+    KEY = 'D#'
+
+    BEGIN_OF_BAR = 0
+
+    # Drum Notes
+    bass_drum_note = BassDrumNote()
+    snare_note = SnareDrumNote()
+    ring_note = SnareRingNote()
+    hihat_closed = ClosedHiHatNote()
+    hihat_open = OpenHiHatNote()
+    crash = Crash1DrumNote()
+    tom1 = Tom1Note()
+    tom2 = Tom2Note()
+
+    # Bass Notes
+    g1_half        = Note(Duration.HALF, NOTES_DICT['G1'], Loudness.FF)
+    g1_quarterdot  = Note(Duration.QUARTER_DOT, NOTES_DICT['G1'], Loudness.FF)
+    g1_quarter     = Note(Duration.QUARTER, NOTES_DICT['G1'], Loudness.FF)
+    g1_eighth      = Note(Duration.EIGHTH, NOTES_DICT['G1'], Loudness.FF)
+    gs1_half       = Note(Duration.HALF, NOTES_DICT['G#1'], Loudness.FF)
+    gs1_quarterdot = Note(Duration.QUARTER_DOT, NOTES_DICT['G#1'], Loudness.FF)
+    gs1_quarter    = Note(Duration.QUARTER, NOTES_DICT['G#1'], Loudness.FF)
+    gs1_eighth     = Note(Duration.EIGHTH, NOTES_DICT['G#1'], Loudness.FF)
+    as1_half       = Note(Duration.HALF, NOTES_DICT['A#1'], Loudness.FF)
+    as1_quarterdot = Note(Duration.QUARTER_DOT, NOTES_DICT['A#1'], Loudness.FF)
+    as1_quarter    = Note(Duration.QUARTER, NOTES_DICT['A#1'], Loudness.FF)
+    as1_eighth     = Note(Duration.EIGHTH, NOTES_DICT['A#1'], Loudness.FF)
+    c2_half        = Note(Duration.HALF, NOTES_DICT['C2'], Loudness.FF)
+    c2_quarterdot  = Note(Duration.QUARTER_DOT, NOTES_DICT['C2'], Loudness.FF)
+    c2_quarter     = Note(Duration.QUARTER, NOTES_DICT['C2'], Loudness.FF)
+    c2_eighth      = Note(Duration.EIGHTH, NOTES_DICT['C2'], Loudness.FF)
+    cs2_half        = Note(Duration.HALF, NOTES_DICT['C#2'], Loudness.FF)
+    cs2_quarterdot  = Note(Duration.QUARTER_DOT, NOTES_DICT['C#2'], Loudness.FF)
+    cs2_quarter     = Note(Duration.QUARTER, NOTES_DICT['C#2'], Loudness.FF)
+    cs2_eighth      = Note(Duration.EIGHTH, NOTES_DICT['C#2'], Loudness.FF)
+    ds2_whole        = Note(Duration.WHOLE, NOTES_DICT['D#2'], Loudness.FF)
+    ds2_half       = Note(Duration.HALF, NOTES_DICT['D#2'], Loudness.FF)
+    ds2_quarterdot = Note(Duration.QUARTER_DOT, NOTES_DICT['D#2'], Loudness.FF)
+    ds2_quarter    = Note(Duration.QUARTER, NOTES_DICT['D#2'], Loudness.FF)
+    ds2_eighth     = Note(Duration.EIGHTH, NOTES_DICT['D#2'], Loudness.FF)
+    
+
+    # EP Harmonies
+    ep_Cm_half = Harmony(Duration.HALF, [ NOTES_DICT['C2' ], 
+                                                NOTES_DICT['G2' ],
+                                                NOTES_DICT['C3' ],
+                                                NOTES_DICT['D#3'],
+                                                NOTES_DICT['G3' ]], Loudness.PP)
+    ep_DS_half = Harmony(Duration.HALF, [ NOTES_DICT['D#2'], 
+                                                NOTES_DICT['A#2' ],
+                                                NOTES_DICT['D#3' ],
+                                                NOTES_DICT['G3'],
+                                                NOTES_DICT['A#3' ]], Loudness.PP)
+    ep_GS_half    = Harmony(Duration.HALF, [ NOTES_DICT['G#2'], 
+                                                                                        NOTES_DICT['D#3'],
+                                                                                        NOTES_DICT['G#3'],
+                                                                                        NOTES_DICT['C4'],
+                                                                                        NOTES_DICT['D#4']], Loudness.PP)
+    ep_AS_half    = Harmony(Duration.HALF, [ NOTES_DICT['A#2'], 
+                                            NOTES_DICT['F3'],
+                                            NOTES_DICT['A#3'],
+                                            NOTES_DICT['D4'],
+                                            NOTES_DICT['F4']], Loudness.PP)
+    ep_GD_half    = Harmony(Duration.HALF, [ NOTES_DICT['G2'], 
+                                            NOTES_DICT['D3'],
+                                            NOTES_DICT['G3'],
+                                            NOTES_DICT['B4'],
+                                            NOTES_DICT['D4']], Loudness.PP)
+
+
+    # Drum Patterns Arrays
+    precount = [(hihat_closed, n * QUANT) for n in range(3)] + [(hihat_open, 3 * QUANT)]
+    bass_drum_verse = [(bass_drum_note, round(n * QUANT)) for n in [0, 1.5, 2, 3.5]]
+    ring_2_4 = [(ring_note, n*QUANT) for n in [1,3]]
+    
+    # Silent Bar
+    silent_bar = Bar(SIGN, QUANT, [])
+    # Drum Bars
+    pre_count_bar = Bar(SIGN, QUANT, precount)
+    verse_drum_bar = Bar(SIGN, QUANT, bass_drum_verse + ring_2_4 + precount)
+    drum_end = Bar(SIGN, QUANT, [(hihat_open, BEGIN_OF_BAR)])
+    
+    # Bass Bars
+    intro = Bar(SIGN, QUANT, [(ds2_quarter, BEGIN_OF_BAR), 
+                                      (ds2_eighth, round(Duration.QUARTER_DOT.value * SIGN * QUANT)),
+                                      (ds2_quarter, round(DurationLegatto([Duration.QUARTER_DOT, Duration.EIGHTH]).value() * SIGN * QUANT)),
+                                      (ds2_eighth, round(DurationLegatto([Duration.QUARTER_DOT, Duration.QUARTER_DOT, Duration.EIGHTH]).value() * SIGN * QUANT)),
+                                    ])
+
+    verse_bass_DS  = Bar(SIGN, QUANT, [(ds2_quarter, BEGIN_OF_BAR), 
+                                      (ds2_eighth, round(Duration.QUARTER_DOT.value * SIGN * QUANT)),
+                                      (ds2_quarter, round(DurationLegatto([Duration.QUARTER_DOT, Duration.EIGHTH]).value() * SIGN * QUANT)),
+                                    ])
+    verse_bass_C  = Bar(SIGN, QUANT, [(c2_quarter, BEGIN_OF_BAR), 
+                                      (c2_eighth, round(Duration.QUARTER_DOT.value * SIGN * QUANT)),
+                                      (c2_quarter, round(DurationLegatto([Duration.QUARTER_DOT, Duration.EIGHTH]).value() * SIGN * QUANT)),
+                                    ])
+    verse_bass_GS  = Bar(SIGN, QUANT, [(gs1_quarter, BEGIN_OF_BAR), 
+                                      (gs1_eighth, round(Duration.QUARTER_DOT.value * SIGN * QUANT)),
+                                      (gs1_quarter, round(DurationLegatto([Duration.QUARTER_DOT, Duration.EIGHTH]).value() * SIGN * QUANT)),
+                                    ])
+    verse_bass_GD  = Bar(SIGN, QUANT, [(g1_quarter, BEGIN_OF_BAR), 
+                                      (g1_eighth, round(Duration.QUARTER_DOT.value * SIGN * QUANT)),
+                                      (g1_quarter, round(DurationLegatto([Duration.QUARTER_DOT, Duration.EIGHTH]).value() * SIGN * QUANT)),
+                                    ])
+    chorus_bass_A  = Bar(SIGN, QUANT, [(gs1_quarter, BEGIN_OF_BAR), 
+                                      (gs1_eighth, round(Duration.QUARTER_DOT.value * SIGN * QUANT)),
+                                      (as1_quarter, round(DurationLegatto([Duration.QUARTER_DOT, Duration.EIGHTH]).value() * SIGN * QUANT)),
+                                      (as1_eighth, round(DurationLegatto([Duration.QUARTER_DOT, Duration.QUARTER_DOT, Duration.EIGHTH]).value() * SIGN * QUANT)),
+                                    ])                                
+    chorus_bass_B  = Bar(SIGN, QUANT, [(ds2_quarter, BEGIN_OF_BAR), 
+                                      (ds2_eighth, round(Duration.QUARTER_DOT.value * SIGN * QUANT)),
+                                      (c2_quarter, round(DurationLegatto([Duration.QUARTER_DOT, Duration.EIGHTH]).value() * SIGN * QUANT)),
+                                      (c2_eighth, round(DurationLegatto([Duration.QUARTER_DOT, Duration.QUARTER_DOT, Duration.EIGHTH]).value() * SIGN * QUANT)),
+                                    ])                                                                
+    solo_bass_A  = Bar(SIGN, QUANT, [(ds2_quarter, BEGIN_OF_BAR), 
+                                      (ds2_eighth, round(Duration.QUARTER_DOT.value * SIGN * QUANT)),
+                                      (gs1_quarter, round(DurationLegatto([Duration.QUARTER_DOT, Duration.EIGHTH]).value() * SIGN * QUANT)),
+                                      (gs1_eighth, round(DurationLegatto([Duration.QUARTER_DOT, Duration.QUARTER_DOT, Duration.EIGHTH]).value() * SIGN * QUANT)),
+                                    ])                                
+    solo_bass_B  = Bar(SIGN, QUANT, [(cs2_quarter, BEGIN_OF_BAR), 
+                                      (cs2_eighth, round(Duration.QUARTER_DOT.value * SIGN * QUANT)),
+                                      (cs2_quarter, round(DurationLegatto([Duration.QUARTER_DOT, Duration.EIGHTH]).value() * SIGN * QUANT)),
+                                    ])
+    bass_end = Bar(SIGN, QUANT, [(ds2_whole, BEGIN_OF_BAR)])
+
+                    
+    # verse_bass_B  = Bar(SIGN, QUANT, [(c1_quarter, BEGIN_OF_BAR), 
+    #                                     (c1_quarter, round(Duration.QUARTER.value * SIGN * QUANT)), 
+    #                                     (c1_quarter, round(2 * Duration.QUARTER.value * SIGN * QUANT)), 
+    #                                     (c1_quarter, round(3 * Duration.QUARTER.value * SIGN * QUANT)), 
+                                      
+    #                                 ])
+    
+    drum = DrumLine([
+        (pre_count_bar, 1+4),
+        (verse_drum_bar, 8 + 6+2 + 8 + 6+1 + 8+3+2 + 8 + 6+1 + 6+2),
+        (drum_end, 1),
+    ])
+    bass = Bass([
+        # Intro
+        (silent_bar, 1), # 1 Counting
+        ([intro, verse_bass_DS], 2), # 4 Intro
+        # Verse 1
+        ([verse_bass_DS, verse_bass_C, verse_bass_GS, verse_bass_GD], 2), # 8 
+        # Chorus 1
+        ([chorus_bass_A, chorus_bass_B], 3), # 6 
+        (verse_bass_GS, 2), # 2 
+        # Verse 2
+        ([verse_bass_DS, verse_bass_C, verse_bass_GS, verse_bass_GD], 2), # 8 
+        # Chorus 2
+        ([chorus_bass_A, chorus_bass_B], 3), # 6 
+        (verse_bass_GS, 1), # 1 
+        # Solo
+        ([verse_bass_DS, verse_bass_C, verse_bass_GS, verse_bass_GD], 2), # 8 Organ
+        (solo_bass_A, 3), # 3 Guitar
+        (solo_bass_B, 2), # 2 Guitar
+        # Verse 3
+        ([verse_bass_DS, verse_bass_C, verse_bass_GS, verse_bass_GD], 2), # 8 
+        # Chorus 3 
+        ([chorus_bass_A, chorus_bass_B], 3), # 6 
+        (verse_bass_GS, 1), # 1 
+        # Final 
+        ([chorus_bass_A, chorus_bass_B], 3), # 6 
+        (verse_bass_GS, 2), # 2 
+        (bass_end, 1),
+        
+    ])
+
+    # Sequencer
+    PlaySequencer(BPM, SIGN, KEY, Instruments(drum, bass)).play()
+
+
 def play():
-    play_hello()
+    # play_hello()
+    play_dont_dream_its_over()
 
 
 if __name__ == "__main__":
