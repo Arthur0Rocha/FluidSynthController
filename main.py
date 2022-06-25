@@ -5,9 +5,7 @@ from general import context, aseq, aconnect_monitor, mvave
 from handle import drumNbass as drum_n_bass, playsingle as sing, playcombi as comb, select, sequencer
 
 def connect_devices():
-    clients, ports = aconnect_monitor.run()[:2]
-    if aconnect_monitor.M_VAVE_NAME in clients:
-        context.set_m_vave_port(int(ports[aconnect_monitor.M_VAVE_NAME]))
+    return aconnect_monitor.run()
 
 def reset_all_connections():
     aconnect_monitor.disconnect_all()
@@ -119,19 +117,15 @@ def manage_output_event(ev):
         pass # print("Attempt of output event in an undefined context mode...")        
 
 CONTEXT_UPDATE_CC_PARAM_VECTOR = \
-    CC_SW + CC_USER + CC_FN + CC_Y + CC_2PEDALS + [CC_ATTACK, CC_VOLUME]
+    CC_SW + CC_USER + CC_FN + CC_Y + CC_2PEDALS + [CC_ATTACK, CC_VOLUME] + MVAVE_REMAP_RANGE
 
 def loop():
     while True:
         time.sleep(0.001)
         while aseq.has_new_event():
             ev = aseq.read_event()
-            mvaven = context.get('m_vave_port')
-            if (mvaven is not None) and (int(ev[5][0]) == int(mvaven)):
-                ev = mvave.remap_input(ev)
             evtype = ev[0]
             data = ev[7]
-            
             if evtype == CC_CODE:
                 param = data[4]
                 if param == CC_PANIC:
@@ -151,7 +145,7 @@ def loop():
 if __name__ == "__main__":
     try:
         init()
-        # loop()
-        sequencer.play()
+        loop()
+        # sequencer.play()
     except KeyboardInterrupt:
         aseq.panic()

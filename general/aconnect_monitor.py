@@ -1,13 +1,16 @@
 import subprocess
 import os
 
+from numpy import append
+
 VORTEX_NAME = "Vortex Wireless 2"
 KROME_NAME = "KROME"
 ARTHUR_SEQ_NAME = "Arthur SEQ"
-FSYNTH_CONTROLLER_NAME = 'FSynth-Controller'
+FSYNTH_CONTROLLER_NAME = "FSynth-Controller"
 QSYNTH_NAME = "FLUID Synth (qsynth)"
 FLUID_SYNTH_NAME = "FLUID Synth (ARX)"
 M_VAVE_NAME = "SINCO"
+M_VAVE_REMAP_NAME = "MVAVE-PEDAL-REMAP"
 
 SYSTEM_NAME = "System"
 MIDI_THROUGH_NAME = "Midi Through"
@@ -51,30 +54,20 @@ def disconnect_all():
     os.system("aconnect -x")
 
 def make_connections(clients, ports, connections):
-    if VORTEX_NAME in clients \
-        and FSYNTH_CONTROLLER_NAME in clients \
-            and (ports[VORTEX_NAME], ports[FSYNTH_CONTROLLER_NAME]) not in connections:
-        os.system(f"aconnect {ports[VORTEX_NAME]} {ports[FSYNTH_CONTROLLER_NAME]} > log")
+    for out, inp in [
+        (VORTEX_NAME, FSYNTH_CONTROLLER_NAME),
+        (FSYNTH_CONTROLLER_NAME, QSYNTH_NAME),
+        (FSYNTH_CONTROLLER_NAME, FLUID_SYNTH_NAME),
+        (M_VAVE_NAME, M_VAVE_REMAP_NAME),
+        (M_VAVE_REMAP_NAME, MIDI_THROUGH_NAME),
+        (M_VAVE_REMAP_NAME, FSYNTH_CONTROLLER_NAME),
 
-    if FSYNTH_CONTROLLER_NAME in clients \
-        and QSYNTH_NAME in clients \
-            and (ports[FSYNTH_CONTROLLER_NAME], ports[QSYNTH_NAME]) not in connections:
-        os.system(f"aconnect {ports[FSYNTH_CONTROLLER_NAME]}:1 {ports[QSYNTH_NAME]} > log")
-
-    if FSYNTH_CONTROLLER_NAME in clients \
-        and FLUID_SYNTH_NAME in clients \
-            and (ports[FSYNTH_CONTROLLER_NAME], ports[FLUID_SYNTH_NAME]) not in connections:
-        os.system(f"aconnect {ports[FSYNTH_CONTROLLER_NAME]}:1 {ports[FLUID_SYNTH_NAME]} > log")
-
-    # if M_VAVE_NAME in clients \
-    #     and MIDI_THROUGH_NAME in clients \
-    #         and (ports[M_VAVE_NAME], ports[MIDI_THROUGH_NAME]) not in connections:
-    #     os.system(f"aconnect {ports[M_VAVE_NAME]} {ports[MIDI_THROUGH_NAME]} > log")
-
-    if M_VAVE_NAME in clients \
-        and FSYNTH_CONTROLLER_NAME in clients \
-            and (ports[M_VAVE_NAME], ports[FSYNTH_CONTROLLER_NAME]) not in connections:
-        os.system(f"aconnect {ports[M_VAVE_NAME]} {ports[FSYNTH_CONTROLLER_NAME]} > log")
+    ]:
+        append = out in [FSYNTH_CONTROLLER_NAME, M_VAVE_REMAP_NAME]
+        if out in clients \
+            and inp in clients \
+                and (ports[out], ports[inp]) not in connections:
+            os.system(f"aconnect {ports[out]}{':1' if append else ''} {ports[inp]} > log")
 
 def run():
     clients, ports, connections = read_clients()
