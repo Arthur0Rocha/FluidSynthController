@@ -32,6 +32,11 @@ def manage_context_update(ev):
             context.set_SW2(value)
         elif param == CC_Y2:
             select.y2(value)
+        elif param in MVAVE_REMAP_RANGE[2:]:
+            # MVAVE incoming message from A to D switches // Avoiding E and F switches
+            print( (param - MVAVE_REMAP_RANGE[2]) % 4 )
+            
+
     
     if context.get_mode() == 'play_single':
         if evtype == CC_CODE:
@@ -117,7 +122,7 @@ def manage_output_event(ev):
         pass # print("Attempt of output event in an undefined context mode...")        
 
 CONTEXT_UPDATE_CC_PARAM_VECTOR = \
-    CC_SW + CC_USER + CC_FN + CC_Y + CC_2PEDALS + [CC_ATTACK, CC_VOLUME] + MVAVE_REMAP_RANGE
+    CC_SW + CC_USER + CC_FN + CC_Y + CC_2PEDALS + [CC_ATTACK] + MVAVE_REMAP_RANGE # + [CC_VOLUME]
 
 def loop():
     while True:
