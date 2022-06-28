@@ -1,8 +1,6 @@
 import subprocess
 import os
 
-from numpy import append
-
 VORTEX_NAME = "Vortex Wireless 2"
 KROME_NAME = "KROME"
 ARTHUR_SEQ_NAME = "Arthur SEQ"
