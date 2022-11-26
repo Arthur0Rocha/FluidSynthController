@@ -394,8 +394,8 @@ def play_dont_dream_its_over():
 
 
 def play():
-    play_hello()
-    # play_dont_dream_its_over()
+    #play_hello()
+    play_dont_dream_its_over()
 
 
 if __name__ == "__main__":
