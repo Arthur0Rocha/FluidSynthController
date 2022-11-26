@@ -150,7 +150,7 @@ def loop():
 if __name__ == "__main__":
     try:
         init()
-        #loop()
-        sequencer.play()
+        loop()
+        #sequencer.play()
     except KeyboardInterrupt:
         aseq.panic()
